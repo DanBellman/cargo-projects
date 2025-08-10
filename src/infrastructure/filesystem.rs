@@ -1,6 +1,11 @@
-use std::path::Path;
-use crate::types::ProjectsResult;
-use std::fs::{write, Metadata};
+use crate::types::{ProjectsError, ProjectsResult};
+use std::{
+    collections::HashMap,
+    env,
+    fs::{self, write, Metadata},
+    io::{Error as IoError, ErrorKind},
+    path::{Path, PathBuf},
+};
 
 pub trait FileSystem: Send + Sync {
     fn read_to_string(&self, path: &Path) -> ProjectsResult<String>;
@@ -8,14 +13,14 @@ pub trait FileSystem: Send + Sync {
     fn exists(&self, path: &Path) -> bool;
     fn create_dir_all(&self, path: &Path) -> ProjectsResult<()>;
     #[allow(dead_code)]
-    fn metadata(&self, path: &Path) -> ProjectsResult<std::fs::Metadata>;
+    fn metadata(&self, path: &Path) -> ProjectsResult<Metadata>;
 }
 
 pub struct RealFileSystem;
 
 impl FileSystem for RealFileSystem {
     fn read_to_string(&self, path: &Path) -> ProjectsResult<String> {
-        Ok(std::fs::read_to_string(path)?)
+        Ok(fs::read_to_string(path)?)
     }
 
   fn write(&self, path: &Path, content: &str) -> ProjectsResult<()> {
@@ -29,18 +34,18 @@ impl FileSystem for RealFileSystem {
     }
 
     fn create_dir_all(&self, path: &Path) -> ProjectsResult<()> {
-        Ok(std::fs::create_dir_all(path)?)
+        Ok(fs::create_dir_all(path)?)
     }
 
     fn metadata(&self, path: &Path) -> ProjectsResult<Metadata> {
-        Ok(std::fs::metadata(path)?)
+        Ok(fs::metadata(path)?)
     }
 }
 
 #[cfg(test)]
 pub struct MockFileSystem {
-    pub files: std::collections::HashMap<std::path::PathBuf, String>,
-    pub metadata_map: std::collections::HashMap<std::path::PathBuf, MockMetadata>,
+    pub files: HashMap<PathBuf, String>,
+    pub metadata_map: HashMap<PathBuf, MockMetadata>,
 }
 
 #[cfg(test)]
@@ -55,8 +60,8 @@ pub struct MockMetadata {
 impl MockFileSystem {
     pub fn new() -> Self {
         Self {
-            files: std::collections::HashMap::new(),
-            metadata_map: std::collections::HashMap::new(),
+            files: HashMap::new(),
+            metadata_map: HashMap::new(),
         }
     }
 
@@ -87,8 +92,8 @@ impl FileSystem for MockFileSystem {
         self.files
             .get(path)
             .cloned()
-            .ok_or_else(|| crate::types::ProjectsError::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
+            .ok_or_else(|| ProjectsError::Io(IoError::new(
+                ErrorKind::NotFound,
                 format!("File not found: {}", path.display()),
             )))
     }
@@ -105,32 +110,24 @@ impl FileSystem for MockFileSystem {
         Ok(())
     }
 
-    fn metadata(&self, path: &Path) -> ProjectsResult<std::fs::Metadata> {
-        // For testing, we need to create a mock metadata object
-        // Since std::fs::Metadata is not constructible directly, we use a workaround:
-        // Create a temporary file to get real metadata, then we'll have to work around this limitation
-        
+    fn metadata(&self, path: &Path) -> ProjectsResult<Metadata> {
         let mock_metadata = self.metadata_map.get(path)
-            .ok_or_else(|| crate::types::ProjectsError::Io(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
+            .ok_or_else(|| ProjectsError::Io(IoError::new(
+                ErrorKind::NotFound,
                 format!("Metadata not found for path: {}", path.display()),
             )))?;
 
-        // Since we can't construct std::fs::Metadata directly, we'll use a temporary file approach
-        // This is a workaround for testing - in a real implementation you might want to create
-        // a trait for metadata operations too
-        let temp_file = std::env::temp_dir().join("mock_metadata_temp");
+        let temp_file = env::temp_dir().join("mock_metadata_temp");
         if mock_metadata.is_dir {
-            std::fs::create_dir_all(&temp_file)?;
-            let metadata = std::fs::metadata(&temp_file)?;
-            std::fs::remove_dir_all(&temp_file).ok(); // Clean up
+            fs::create_dir_all(&temp_file)?;
+            let metadata = fs::metadata(&temp_file)?;
+            fs::remove_dir_all(&temp_file).ok();
             Ok(metadata)
         } else {
-            // Create a temporary file with the right size
             let content = "x".repeat(mock_metadata.len as usize);
-            std::fs::write(&temp_file, content)?;
-            let metadata = std::fs::metadata(&temp_file)?;
-            std::fs::remove_file(&temp_file).ok(); // Clean up
+            fs::write(&temp_file, content)?;
+            let metadata = fs::metadata(&temp_file)?;
+            fs::remove_file(&temp_file).ok();
             Ok(metadata)
         }
     }
