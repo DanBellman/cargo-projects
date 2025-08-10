@@ -181,7 +181,7 @@ fn register_watcher(name: &WatcherName, path: &Path) -> CommandResult {
 
 fn update_project_size_if_exists(changed_path: &Path) {
     service_factory::create_default_project_service().ok().and_then(|service| {
-        service.find_project_by_path(changed_path).ok()?
+        service.find_project_containing_path(changed_path).ok()?
             .map(|project| service.add_project(update_project_size_values(project)).ok())
     });
 }

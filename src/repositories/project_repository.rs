@@ -9,6 +9,7 @@ pub trait ProjectRepository: Send + Sync {
     fn find_by_id(&self, id: ProjectId) -> ProjectsResult<Option<RustProject>>;
     fn find_by_watcher(&self, watcher_name: &WatcherName) -> ProjectsResult<Vec<RustProject>>;
     fn find_by_path(&self, path: &Path) -> ProjectsResult<Option<RustProject>>;
+    fn find_containing_project(&self, path: &Path) -> ProjectsResult<Option<RustProject>>;
     fn save(&self, project: RustProject) -> ProjectsResult<()>;
     fn save_all(&self, projects: Vec<RustProject>) -> ProjectsResult<()>;
     #[allow(dead_code)]
@@ -96,12 +97,13 @@ impl<F: FileSystem> ProjectRepository for FileProjectRepository<F> {
         let registry = self.load_registry()?;
         let canonical_path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
         
-        Ok(registry
-            .path_index
-            .get(&canonical_path)
-            .and_then(|project_path| registry.projects.get(project_path).cloned())
-        )
+        // Only return exact matches for project root directories
+        Ok(registry.projects.get(&canonical_path).cloned())
+    }
 
+    fn find_containing_project(&self, path: &Path) -> ProjectsResult<Option<RustProject>> {
+        let registry = self.load_registry()?;
+        Ok(registry.find_project_containing_path(path).cloned())
     }
 
     fn save(&self, project: RustProject) -> ProjectsResult<()> {
@@ -133,7 +135,10 @@ impl<F: FileSystem> ProjectRepository for FileProjectRepository<F> {
 
     fn exists(&self, path: &Path) -> ProjectsResult<bool> {
         self.load_registry()
-            .map(|registry| registry.projects.values().any(|p| p.path == path))
+            .map(|registry| {
+                let canonical_path = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+                registry.projects.contains_key(&canonical_path)
+            })
     }
 
     fn remove_all_projects(&self) -> ProjectsResult<bool> {

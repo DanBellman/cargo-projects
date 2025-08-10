@@ -69,8 +69,6 @@ pub struct RustProject {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProjectRegistry {
     pub projects: HashMap<PathBuf, RustProject>,
-    #[serde(default)]
-    pub path_index: HashMap<PathBuf, PathBuf>,
     pub last_updated: DateTime<Utc>,
     pub next_id: ProjectId,
 }
@@ -232,7 +230,6 @@ impl ProjectRegistry {
     pub fn new() -> Self {
         Self {
             projects: HashMap::new(),
-            path_index: HashMap::new(),
             last_updated: Utc::now(),
             next_id: ProjectId::new(1),
         }
@@ -242,42 +239,28 @@ impl ProjectRegistry {
         project.id = self.next_id;
         self.next_id = self.next_id.next();
 
-        self.path_index
-            .retain(|_, project_path| project_path != &project.path);
-
-        self.index_project_paths(&project.path);
-
         self.projects.insert(project.path.clone(), project);
         self.last_updated = Utc::now();
     }
 
-    fn index_project_paths(&mut self, project_path: &PathBuf) {
-        if let Ok(entries) = fs::read_dir(project_path) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                self.path_index.insert(path.clone(), project_path.clone());
-
-                if path.is_dir() {
-                    self.index_directory_recursive(&path, project_path);
-                }
-            }
+    pub fn find_project_containing_path(&self, file_path: &Path) -> Option<&RustProject> {
+        let canonical_path = file_path.canonicalize().unwrap_or_else(|_| file_path.to_path_buf());
+        
+        // First check if the path itself is a project
+        if let Some(project) = self.projects.get(&canonical_path) {
+            return Some(project);
         }
-
-        self.path_index
-            .insert(project_path.clone(), project_path.clone());
-    }
-
-    fn index_directory_recursive(&mut self, dir_path: &PathBuf, project_path: &PathBuf) {
-        if let Ok(entries) = fs::read_dir(dir_path) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                self.path_index.insert(path.clone(), project_path.clone());
-
-                if path.is_dir() {
-                    self.index_directory_recursive(&path, project_path);
-                }
+        
+        // Walk up the directory tree to find a containing project
+        let mut current_path = canonical_path.parent();
+        while let Some(path) = current_path {
+            if let Some(project) = self.projects.get(path) {
+                return Some(project);
             }
+            current_path = path.parent();
         }
+        
+        None
     }
 
     #[allow(dead_code)]

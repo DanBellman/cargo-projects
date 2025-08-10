@@ -110,6 +110,7 @@ fn collect_project_paths(path: &Path) -> CommandResult<Vec<std::path::PathBuf>> 
                             | "__pycache__"
                             | ".vscode"
                             | ".idea"
+                            | ".venv"
                             | "build"
                             | "dist"
                             | "out"

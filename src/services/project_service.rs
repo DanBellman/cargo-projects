@@ -35,6 +35,10 @@ impl<P: ProjectRepository, W: WatcherRepository> ProjectService<P, W> {
         self.project_repo.find_by_path(path)
     }
 
+    pub fn find_project_containing_path(&self, path: &std::path::Path) -> ProjectsResult<Option<RustProject>> {
+        self.project_repo.find_containing_project(path)
+    }
+
     pub fn add_project(&self, project: RustProject) -> ProjectsResult<()> {
         self.project_repo.save(project)
     }
