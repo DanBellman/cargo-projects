@@ -3,7 +3,7 @@ Recreational project. Please dont use it seriously.
 Most things don't work completely as intended. It misses a lot of intended features and has a lot of bugs, especially the check time build check time stuff.
 Please don't use this tool unless you want to take this codebase to make your own project manager and use ite as a starting point. If so, have fun and enjoy. 
 For contributors: As this is just a fun project, there are not really any rules, but I enjoy to look at functional expressions.
-I am especially interested in functional programming in Rust and trying to complety apply it to this project..
+I am especially interested in functional programming in Rust and trying to complety apply it to this project...
 
 # License
 This project is dual-licensed under:
