@@ -1,0 +1,73 @@
+[package]
+name = "cargo-projects"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "CLI tools for managing Rust cargo projects"
+repository = "https://codeberg.org/danielbellamnn/cargo-projects"
+keywords = ["cargo", "rust", "cli", "project-management", "developer-tools"]
+categories = ["command-line-utilities", "development-tools"]
+authors = ["Daniel Bellmann"]
+
+[dependencies]
+cargo_metadata = "0.21.0"
+clap = { version = "4.5.41", features = ["derive"] } 
+clap-cargo = "0.16.0"                                           # For cargo imitating cli tools
+clap-verbosity-flag = "3.0.3"
+escargot = "0.5.14"                                             # For cargo commands wrapping, e.g cargo init
+log = "0.4.27"
+env_logger = "0.11"
+notify = { version = "8.1.0", features = ["serde"] }
+notify-debouncer-full = "0.5.0"
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.10.1"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6.0.0"
+toml = "0.9.2"
+ignore = "0.4"
+tabled = "0.20"
+byte-unit = "5.1"
+humantime = "2.1"
+anyhow = "1.0"
+thiserror = "2.0"
+rayon = "1.10"
+
+[dev-dependencies]
+tempfile = "3.10"
+#criterion = { version = "0.7", features = ["html_reports"] }
+
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+
+module-name-repetitions = "allow"
+must-use-candidate = "allow"
+missing-errors-doc = "allow"
+missing-panics-doc = "allow"
+format-push-string = "allow"  
+wildcard-imports = "allow"    
+cast-possible-truncation = "allow"  
+cast-sign-loss = "allow"      
+multiple-crate-versions = "allow"  
+cargo-common-metadata = "allow"    
+
+inefficient-to-string = "deny"
+unnecessary-wraps = "warn"
+ptr-arg = "warn"
+large-types-passed-by-value = "warn"  
+trivially-copy-pass-by-ref = "warn"   
+rc-clone-in-vec-init = "warn"       
+
+unused-io-amount = "deny"          
+lossy-float-literal = "deny"       
+float-arithmetic = "warn"          
+
+manual-memcpy = "warn"               
+needless-collect = "warn"          
+redundant-clone = "warn"         
+useless-vec = "warn"              
+
+path-buf-push-overwrite = "deny"     
+suspicious-open-options = "warn"     

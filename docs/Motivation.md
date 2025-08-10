@@ -1,0 +1,5 @@
+Who is this for? Mainly me, but I think it can be useful for other developers as well who are working on multiple Rust projects locally and who want to keep their development environment organized, especially disk usage. 
+
+My motivation for writing this project: My main workstaion only has 500GB storage and has rather weak compile hardware. I like to create various projects, compile them and leave them just there so I can come back later without compiling. That is especially useful if I work on bevy games and compare different games. At one point I hit my max storage and have to delete some stuff. Most of the time I just forgot which projects I didnt regularly use anymore, and which could be cleaned up by `cargo clean`. But I also forget how painfully long some projects take to compile, so this tool also helps me in managing if I should clean this one project up or not and how frequent I actually used it (or looked at it). 
+
+I hope this tool helps people like me. 
