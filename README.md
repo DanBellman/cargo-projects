@@ -12,10 +12,10 @@ This project is dual-licensed under:
 
 ---
 
-- [Installation](docs/installation.md)
-- [Motivation](docs/motivation.md)
-- [Complete Overview](docs/overview.md)
-- [Usage](docs/usage.md)
+- [Installation](docs/Installation.md)
+- [Motivation](docs/Motivation.md)
+- [Complete Overview](docs/Overview.md)
+- [Usage](docs/Usage.md)
 
 # cargo-projects
 
